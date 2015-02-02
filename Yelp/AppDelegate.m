@@ -14,12 +14,20 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    
-    self.window.rootViewController = [[MainViewController alloc] init];
-    
+
+    MainViewController *vc = [[MainViewController alloc] init];
+    UINavigationController *nvc = [[UINavigationController alloc] initWithRootViewController: vc];
+    nvc.navigationBar.barStyle = UIStatusBarStyleLightContent;
+    nvc.navigationBar.barTintColor = [UIColor colorWithRed:184/255.0 green:16/255.0 blue:0 alpha:1.0];
+    nvc.navigationBar.tintColor = [UIColor whiteColor];
+
+    self.window.rootViewController = nvc;
+
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
+    
     return YES;
+
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
