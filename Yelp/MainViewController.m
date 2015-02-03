@@ -24,6 +24,7 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSArray *businesses;
 
+- (void) fetchBusinessesWithQuery: (NSString *)query params: (NSDictionary *)params;
 
 @end
 
@@ -33,17 +34,7 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     if (self) {
-        // You can register for Yelp API keys here: http://www.yelp.com/developers/manage_api_keys
-        self.client = [[YelpClient alloc] initWithConsumerKey:kYelpConsumerKey consumerSecret:kYelpConsumerSecret accessToken:kYelpToken accessSecret:kYelpTokenSecret];
-        
-        [self.client searchWithTerm:@"Thai" success:^(AFHTTPRequestOperation *operation, id response) {
-            
-            self.businesses = response[@"businesses"];
-            [self.tableView reloadData];
-
-        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            NSLog(@"error: %@", [error description]);
-        }];
+        [self fetchBusinessesWithQuery:@"Restaurants" params: nil];
     }
     return self;
 }
@@ -84,12 +75,13 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
     ResultCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ResultCell"];
     
     NSDictionary *business = self.businesses[indexPath.row];
+    NSArray *street = [business valueForKeyPath: @"location.address"];
     
     float distance = [business[@"distance"] floatValue];
     
     cell.businessTitleLabel.text = [NSString stringWithFormat:@"%i. %@", (int)indexPath.item + 1, business[@"name"]];
     cell.categoryLabel.text = [[[business valueForKeyPath: @"categories"] objectAtIndex:0] objectAtIndex:0];
-    cell.addressLabel.text =  [NSString stringWithFormat: @"%@, %@", [[business valueForKeyPath:@"location.address"] objectAtIndex:0], [business valueForKeyPath:@"location.city"]];
+    cell.addressLabel.text =  [NSString stringWithFormat: @"%@, %@", (street.count)? street[0] : @"" , [business valueForKeyPath:@"location.city"]];
     cell.reviewCountLabel.text = [NSString stringWithFormat: @"%@ reviews", business[@"review_count"]];
     cell.distanceLabel.text = [NSString stringWithFormat:@" %.02f mi", distance ];
     
@@ -104,11 +96,31 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 #pragma mark - Filter 
 
 - (void) filterViewController:(filterViewController *)filterViewController didChangeFilters:(NSDictionary *)filters {
-    //fire new network event
+
+    [self fetchBusinessesWithQuery:@"Restaurants" params: filters];
 }
 
 
 #pragma mark - Private methods
+
+- (void) fetchBusinessesWithQuery: (NSString *)query params: (NSDictionary *)params {
+    // You can register for Yelp API keys here: http://www.yelp.com/developers/manage_api_keys
+    self.client = [[YelpClient alloc] initWithConsumerKey:kYelpConsumerKey consumerSecret:kYelpConsumerSecret accessToken:kYelpToken accessSecret:kYelpTokenSecret];
+    
+    [self.client searchWithTerm:query params:params success:^(AFHTTPRequestOperation *operation, id response) {
+        
+        self.businesses = response[@"businesses"];
+        
+
+        [self.tableView reloadData];
+        
+
+        
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"error: %@", [error description]);
+    }];
+}
+
 
 - (void) onFilterButton {
     filterViewController *vc = [[filterViewController alloc] init];

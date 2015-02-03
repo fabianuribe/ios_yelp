@@ -9,7 +9,7 @@
 #import "filterViewController.h"
 #import "SwitchCell.h"
 
-@interface filterViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface filterViewController () <UITableViewDataSource, UITableViewDelegate, SwitchCellDelegate>
 
 @property (nonatomic, readonly) NSDictionary *filters;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
@@ -93,12 +93,24 @@
 
     }
 }
-                              
-                              
-
-
 
 #pragma mark - Private methods
+
+- (NSDictionary *) filters {
+    NSMutableDictionary *filters = [NSMutableDictionary dictionary];
+    
+    if (self.selectedCategories.count > 0) {
+        NSMutableArray *names = [NSMutableArray array];
+        for (NSDictionary *category in self.selectedCategories) {
+            [names addObject:category[@"code"]];
+            NSString *categoryFilter = [names componentsJoinedByString:@","];
+            [filters setObject:categoryFilter forKey:@"category_filter"];
+        }
+    }
+    
+    return filters;
+}
+
 
 - (void) onCancelBtn {
     [self dismissViewControllerAnimated:YES completion:nil];
@@ -119,7 +131,6 @@
                           @{@"name" : @"Argentine", @"code": @"argentine" },
                           @{@"name" : @"Armenian", @"code": @"armenian" },
                           @{@"name" : @"Asian Fusion", @"code": @"asianfusion" },
-                          @{@"name" : @"Asturian", @"code": @"asturian" },
                           @{@"name" : @"Australian", @"code": @"australian" },
                           @{@"name" : @"Austrian", @"code": @"austrian" },
                           @{@"name" : @"Baguettes", @"code": @"baguettes" },
