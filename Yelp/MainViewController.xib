@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6245" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6724" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6711"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="MainViewController">
@@ -15,12 +15,18 @@
             <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <tableView clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="RRJ-6d-bah">
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="RRJ-6d-bah">
                     <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                 </tableView>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="RRJ-6d-bah" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="2OB-Ln-mwk"/>
+                <constraint firstAttribute="bottom" secondItem="RRJ-6d-bah" secondAttribute="bottom" id="W0f-mm-Zfz"/>
+                <constraint firstAttribute="trailing" secondItem="RRJ-6d-bah" secondAttribute="trailing" id="X7p-hF-Kie"/>
+                <constraint firstItem="RRJ-6d-bah" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="fJH-zV-vTD"/>
+            </constraints>
         </view>
     </objects>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
