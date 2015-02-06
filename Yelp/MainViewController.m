@@ -10,6 +10,7 @@
 #import "YelpClient.h"
 #import "ResultCell.h"
 #import "UIImageView+AFNetworking.h"
+#import "JGProgressHUD.h"
 #import "filterViewController.h"
 
 
@@ -131,6 +132,11 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 - (void) fetchBusinessesWithQuery: (NSString *)query params: (NSDictionary *)params {
     // You can register for Yelp API keys here: http://www.yelp.com/developers/manage_api_keys
     self.client = [[YelpClient alloc] initWithConsumerKey:kYelpConsumerKey consumerSecret:kYelpConsumerSecret accessToken:kYelpToken accessSecret:kYelpTokenSecret];
+
+    JGProgressHUD *HUD = [JGProgressHUD progressHUDWithStyle:JGProgressHUDStyleDark];
+    HUD.textLabel.text = @"Loading";
+    [HUD showInView:self.view];
+    
     
     [self.client searchWithTerm:query params:params success:^(AFHTTPRequestOperation *operation, id response) {
         
@@ -139,10 +145,18 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 
         [self.tableView reloadData];
         
+        [HUD dismissAfterDelay:.3];
 
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         NSLog(@"error: %@", [error description]);
+        HUD.textLabel.text = @"Error while getting results";
+
+        self.businesses =  @[];
+        [self.tableView reloadData];
+
+        [HUD dismissAfterDelay:2.0];
+
     }];
 }
 
