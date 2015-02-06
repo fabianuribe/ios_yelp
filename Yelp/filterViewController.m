@@ -8,15 +8,28 @@
 
 #import "filterViewController.h"
 #import "SwitchCell.h"
+#import "SegmentedViewCell.h"
 
-@interface filterViewController () <UITableViewDataSource, UITableViewDelegate, SwitchCellDelegate>
+@interface filterViewController () <UITableViewDataSource, UITableViewDelegate, SwitchCellDelegate, SegmentedViewCellDelegate>
 
 @property (nonatomic, readonly) NSDictionary *filters;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
+
 @property (nonatomic, strong) NSArray *categories;
+@property (nonatomic, strong) NSArray *distanceOptions;
+@property (nonatomic, strong) NSArray *sortOptions;
+@property (nonatomic, strong) NSArray *popularOptions;
+
+
 @property (nonatomic, strong) NSMutableSet *selectedCategories;
+@property  BOOL onlyDeals;
+@property  NSInteger selectedDistance;
+@property  NSInteger selectedSort;
 
 - (void) initCategories;
+- (void) initDistanceOptions;
+- (void) initSortOptions;
+
 
 @end
 
@@ -29,6 +42,9 @@
     if (self) {
         self.selectedCategories = [NSMutableSet set];
         [self initCategories];
+        [self initDistanceOptions];
+        [self initSortOptions];
+        self.onlyDeals = NO;
     }
     
     return self;
@@ -45,12 +61,35 @@
     self.tableView.dataSource = self;
     
     [self.tableView registerNib:[UINib nibWithNibName:@"SwitchCell" bundle:nil] forCellReuseIdentifier:@"SwitchCell"];
+    [self.tableView registerNib:[UINib nibWithNibName:@"SegmentedViewCell" bundle:nil] forCellReuseIdentifier:@"SegmentedViewCell"];
+
 }
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 4;
+}
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section{
+    if (section == 0) {
+        return @"Sort by";
+    }
+    else if (section == 1){
+        return @"Distance";
+    }
+    else if ( section == 2 ){
+        return @"Popular";
+    }
+    else{
+        return @"Categories";
+    }
+}
+
+
 
 /*
 #pragma mark - Navigation
@@ -64,21 +103,75 @@
 
 #pragma mark - TableView methods
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return self.categories.count;
+- (NSInteger) tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    if (section == 0) {
+        return 1;
+    }else if( section == 1 ){
+        return 1;
+    }else if( section == 2){
+        return 1;
+    }else{
+        return self.categories.count;
+    }
 }
 
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+
+    if ([indexPath section] == 0) {
+        
+        SegmentedViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SegmentedViewCell"];
+        
+        [cell.segmentedControl removeAllSegments];
+
+        
+        for (NSDictionary *option in self.sortOptions) {
+            [cell.segmentedControl insertSegmentWithTitle:option[@"title"] atIndex:cell.segmentedControl.numberOfSegments animated:NO];
+        }
+        
+        cell.segmentedControl.selectedSegmentIndex = 0;
+        cell.delegate = self;
+
+        return cell;
+
+    }
     
-    SwitchCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SwitchCell"];
-    
-    cell.switchLabel.text = self.categories[indexPath.row][@"name"];
-    cell.on = [self.selectedCategories containsObject:self.categories[indexPath.row]];
-    cell.delegate = self;
-    
-    return cell;
-    
+    if ([indexPath section] == 1) {
+        
+        SegmentedViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SegmentedViewCell"];
+        
+        [cell.segmentedControl removeAllSegments];
+        
+        for (NSDictionary *distance in self.distanceOptions) {
+            [cell.segmentedControl insertSegmentWithTitle:distance[@"title"] atIndex:cell.segmentedControl.numberOfSegments animated:NO];
+        }
+        
+        cell.segmentedControl.selectedSegmentIndex = 0;
+        cell.delegate = self;
+
+        return cell;
+        
+    }
+    if ([indexPath section] == 2) {
+        
+        SwitchCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SwitchCell"];
+        
+        cell.switchLabel.text = @"Offering a deal";
+        cell.on = [self.selectedCategories containsObject:self.categories[indexPath.row]];
+        cell.delegate = self;
+        
+        return cell;
+        
+    } else {
+        SwitchCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SwitchCell"];
+        
+        cell.switchLabel.text = self.categories[indexPath.row][@"name"];
+        cell.on = [self.selectedCategories containsObject:self.categories[indexPath.row]];
+        cell.delegate = self;
+        
+        return cell;
+    }
+
 }
 
 #pragma mark -  Switch cell delegate methods
@@ -86,21 +179,58 @@
 - (void) switchCell: (SwitchCell *)cell didUpdateValue:(BOOL)value{
     NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
     
-    if (value) {
-        [self.selectedCategories addObject: self.categories[indexPath.row]];
-    } else {
-        [self.selectedCategories removeObject: self.categories[indexPath.row]];
+    if ([indexPath section] == 2) {
+        if (value) {
+            self.onlyDeals = YES;
+        } else {
+            self.onlyDeals = NO;
+        }
+    }
 
+    if ([indexPath section] == 3) {
+    
+        if (value) {
+            [self.selectedCategories addObject: self.categories[indexPath.row]];
+        } else {
+            [self.selectedCategories removeObject: self.categories[indexPath.row]];
+        }
     }
 }
+
+- (void) segmentedViewCell: (SegmentedViewCell *)cell didUpdateValue:(NSInteger)value {
+    
+    NSIndexPath *indexPath = [self.tableView indexPathForCell:cell];
+    
+    if ([indexPath section] == 0) {
+        self.selectedSort = value;
+    }
+    
+    if ([indexPath section] == 1) {
+        self.selectedDistance = value;
+    }
+}
+
 
 #pragma mark - Private methods
 
 - (NSDictionary *) filters {
+    
     NSMutableDictionary *filters = [NSMutableDictionary dictionary];
+    
+    [filters setObject:self.sortOptions[self.selectedSort][@"value"] forKey:@"sort"];
+    
+    
+    [filters setObject:self.distanceOptions[self.selectedDistance][@"value"] forKey:@"radius_filter"];
+    
+    
+    if (self.onlyDeals == YES) {
+        [filters setObject:@"true" forKey:@"deals_filter"];
+    }
+    
     
     if (self.selectedCategories.count > 0) {
         NSMutableArray *names = [NSMutableArray array];
+        
         for (NSDictionary *category in self.selectedCategories) {
             [names addObject:category[@"code"]];
             NSString *categoryFilter = [names componentsJoinedByString:@","];
@@ -123,175 +253,31 @@
 
 - (void) initCategories {
     
-    self.categories =  @[@{@"name" : @"Afghan", @"code": @"afghani" },
-                          @{@"name" : @"African", @"code": @"african" },
-                          @{@"name" : @"American, New", @"code": @"newamerican" },
-                          @{@"name" : @"American, Traditional", @"code": @"tradamerican" },
-                          @{@"name" : @"Arabian", @"code": @"arabian" },
-                          @{@"name" : @"Argentine", @"code": @"argentine" },
-                          @{@"name" : @"Armenian", @"code": @"armenian" },
-                          @{@"name" : @"Asian Fusion", @"code": @"asianfusion" },
-                          @{@"name" : @"Australian", @"code": @"australian" },
-                          @{@"name" : @"Austrian", @"code": @"austrian" },
-                          @{@"name" : @"Baguettes", @"code": @"baguettes" },
-                          @{@"name" : @"Bangladeshi", @"code": @"bangladeshi" },
-                          @{@"name" : @"Barbeque", @"code": @"bbq" },
-                          @{@"name" : @"Basque", @"code": @"basque" },
-                          @{@"name" : @"Bavarian", @"code": @"bavarian" },
-                          @{@"name" : @"Beer Garden", @"code": @"beergarden" },
-                          @{@"name" : @"Beer Hall", @"code": @"beerhall" },
-                          @{@"name" : @"Beisl", @"code": @"beisl" },
-                          @{@"name" : @"Belgian", @"code": @"belgian" },
-                          @{@"name" : @"Bistros", @"code": @"bistros" },
-                          @{@"name" : @"Black Sea", @"code": @"blacksea" },
-                          @{@"name" : @"Brasseries", @"code": @"brasseries" },
-                          @{@"name" : @"Brazilian", @"code": @"brazilian" },
-                          @{@"name" : @"Breakfast & Brunch", @"code": @"breakfast_brunch" },
-                          @{@"name" : @"British", @"code": @"british" },
-                          @{@"name" : @"Buffets", @"code": @"buffets" },
-                          @{@"name" : @"Bulgarian", @"code": @"bulgarian" },
-                          @{@"name" : @"Burgers", @"code": @"burgers" },
-                          @{@"name" : @"Burmese", @"code": @"burmese" },
-                          @{@"name" : @"Cafes", @"code": @"cafes" },
-                          @{@"name" : @"Cafeteria", @"code": @"cafeteria" },
-                          @{@"name" : @"Cajun/Creole", @"code": @"cajun" },
-                          @{@"name" : @"Cambodian", @"code": @"cambodian" },
-                          @{@"name" : @"Canadian", @"code": @"New)" },
-                          @{@"name" : @"Canteen", @"code": @"canteen" },
-                          @{@"name" : @"Caribbean", @"code": @"caribbean" },
-                          @{@"name" : @"Catalan", @"code": @"catalan" },
-                          @{@"name" : @"Chech", @"code": @"chech" },
-                          @{@"name" : @"Cheesesteaks", @"code": @"cheesesteaks" },
-                          @{@"name" : @"Chicken Shop", @"code": @"chickenshop" },
-                          @{@"name" : @"Chicken Wings", @"code": @"chicken_wings" },
-                          @{@"name" : @"Chilean", @"code": @"chilean" },
+    self.categories =  @[ @{@"name" : @"American, Traditional", @"code": @"tradamerican" },
                           @{@"name" : @"Chinese", @"code": @"chinese" },
-                          @{@"name" : @"Comfort Food", @"code": @"comfortfood" },
-                          @{@"name" : @"Corsican", @"code": @"corsican" },
-                          @{@"name" : @"Creperies", @"code": @"creperies" },
-                          @{@"name" : @"Cuban", @"code": @"cuban" },
-                          @{@"name" : @"Curry Sausage", @"code": @"currysausage" },
-                          @{@"name" : @"Cypriot", @"code": @"cypriot" },
-                          @{@"name" : @"Czech", @"code": @"czech" },
-                          @{@"name" : @"Czech/Slovakian", @"code": @"czechslovakian" },
-                          @{@"name" : @"Danish", @"code": @"danish" },
-                          @{@"name" : @"Delis", @"code": @"delis" },
-                          @{@"name" : @"Diners", @"code": @"diners" },
-                          @{@"name" : @"Dumplings", @"code": @"dumplings" },
-                          @{@"name" : @"Eastern European", @"code": @"eastern_european" },
-                          @{@"name" : @"Ethiopian", @"code": @"ethiopian" },
-                          @{@"name" : @"Fast Food", @"code": @"hotdogs" },
-                          @{@"name" : @"Filipino", @"code": @"filipino" },
-                          @{@"name" : @"Fish & Chips", @"code": @"fishnchips" },
-                          @{@"name" : @"Fondue", @"code": @"fondue" },
-                          @{@"name" : @"Food Court", @"code": @"food_court" },
-                          @{@"name" : @"Food Stands", @"code": @"foodstands" },
-                          @{@"name" : @"French", @"code": @"french" },
-                          @{@"name" : @"French Southwest", @"code": @"sud_ouest" },
-                          @{@"name" : @"Galician", @"code": @"galician" },
-                          @{@"name" : @"Gastropubs", @"code": @"gastropubs" },
-                          @{@"name" : @"Georgian", @"code": @"georgian" },
-                          @{@"name" : @"German", @"code": @"german" },
-                          @{@"name" : @"Giblets", @"code": @"giblets" },
-                          @{@"name" : @"Gluten-Free", @"code": @"gluten_free" },
-                          @{@"name" : @"Greek", @"code": @"greek" },
-                          @{@"name" : @"Halal", @"code": @"halal" },
-                          @{@"name" : @"Hawaiian", @"code": @"hawaiian" },
-                          @{@"name" : @"Heuriger", @"code": @"heuriger" },
-                          @{@"name" : @"Himalayan/Nepalese", @"code": @"himalayan" },
-                          @{@"name" : @"Hong Kong Style Cafe", @"code": @"hkcafe" },
-                          @{@"name" : @"Hot Dogs", @"code": @"hotdog" },
-                          @{@"name" : @"Hot Pot", @"code": @"hotpot" },
-                          @{@"name" : @"Hungarian", @"code": @"hungarian" },
-                          @{@"name" : @"Iberian", @"code": @"iberian" },
-                          @{@"name" : @"Indian", @"code": @"indpak" },
-                          @{@"name" : @"Indonesian", @"code": @"indonesian" },
-                          @{@"name" : @"International", @"code": @"international" },
-                          @{@"name" : @"Irish", @"code": @"irish" },
-                          @{@"name" : @"Island Pub", @"code": @"island_pub" },
-                          @{@"name" : @"Israeli", @"code": @"israeli" },
                           @{@"name" : @"Italian", @"code": @"italian" },
                           @{@"name" : @"Japanese", @"code": @"japanese" },
-                          @{@"name" : @"Jewish", @"code": @"jewish" },
-                          @{@"name" : @"Kebab", @"code": @"kebab" },
-                          @{@"name" : @"Korean", @"code": @"korean" },
-                          @{@"name" : @"Kosher", @"code": @"kosher" },
-                          @{@"name" : @"Kurdish", @"code": @"kurdish" },
-                          @{@"name" : @"Laos", @"code": @"laos" },
-                          @{@"name" : @"Laotian", @"code": @"laotian" },
-                          @{@"name" : @"Latin American", @"code": @"latin" },
-                          @{@"name" : @"Live/Raw Food", @"code": @"raw_food" },
-                          @{@"name" : @"Lyonnais", @"code": @"lyonnais" },
-                          @{@"name" : @"Malaysian", @"code": @"malaysian" },
-                          @{@"name" : @"Meatballs", @"code": @"meatballs" },
-                          @{@"name" : @"Mediterranean", @"code": @"mediterranean" },
                           @{@"name" : @"Mexican", @"code": @"mexican" },
-                          @{@"name" : @"Middle Eastern", @"code": @"mideastern" },
-                          @{@"name" : @"Milk Bars", @"code": @"milkbars" },
-                          @{@"name" : @"Modern Australian", @"code": @"modern_australian" },
-                          @{@"name" : @"Modern European", @"code": @"modern_european" },
-                          @{@"name" : @"Mongolian", @"code": @"mongolian" },
-                          @{@"name" : @"Moroccan", @"code": @"moroccan" },
-                          @{@"name" : @"New Zealand", @"code": @"newzealand" },
-                          @{@"name" : @"Night Food", @"code": @"nightfood" },
-                          @{@"name" : @"Norcinerie", @"code": @"norcinerie" },
-                          @{@"name" : @"Open Sandwiches", @"code": @"opensandwiches" },
-                          @{@"name" : @"Oriental", @"code": @"oriental" },
-                          @{@"name" : @"Pakistani", @"code": @"pakistani" },
-                          @{@"name" : @"Parent Cafes", @"code": @"eltern_cafes" },
-                          @{@"name" : @"Parma", @"code": @"parma" },
-                          @{@"name" : @"Persian/Iranian", @"code": @"persian" },
-                          @{@"name" : @"Peruvian", @"code": @"peruvian" },
-                          @{@"name" : @"Pita", @"code": @"pita" },
-                          @{@"name" : @"Pizza", @"code": @"pizza" },
-                          @{@"name" : @"Polish", @"code": @"polish" },
-                          @{@"name" : @"Portuguese", @"code": @"portuguese" },
-                          @{@"name" : @"Potatoes", @"code": @"potatoes" },
-                          @{@"name" : @"Poutineries", @"code": @"poutineries" },
-                          @{@"name" : @"Pub Food", @"code": @"pubfood" },
-                          @{@"name" : @"Rice", @"code": @"riceshop" },
-                          @{@"name" : @"Romanian", @"code": @"romanian" },
-                          @{@"name" : @"Rotisserie Chicken", @"code": @"rotisserie_chicken" },
-                          @{@"name" : @"Rumanian", @"code": @"rumanian" },
-                          @{@"name" : @"Russian", @"code": @"russian" },
-                          @{@"name" : @"Salad", @"code": @"salad" },
-                          @{@"name" : @"Sandwiches", @"code": @"sandwiches" },
-                          @{@"name" : @"Scandinavian", @"code": @"scandinavian" },
-                          @{@"name" : @"Scottish", @"code": @"scottish" },
-                          @{@"name" : @"Seafood", @"code": @"seafood" },
-                          @{@"name" : @"Serbo Croatian", @"code": @"serbocroatian" },
-                          @{@"name" : @"Signature Cuisine", @"code": @"signature_cuisine" },
-                          @{@"name" : @"Singaporean", @"code": @"singaporean" },
-                          @{@"name" : @"Slovakian", @"code": @"slovakian" },
-                          @{@"name" : @"Soul Food", @"code": @"soulfood" },
-                          @{@"name" : @"Soup", @"code": @"soup" },
-                          @{@"name" : @"Southern", @"code": @"southern" },
-                          @{@"name" : @"Spanish", @"code": @"spanish" },
-                          @{@"name" : @"Steakhouses", @"code": @"steak" },
-                          @{@"name" : @"Sushi Bars", @"code": @"sushi" },
-                          @{@"name" : @"Swabian", @"code": @"swabian" },
-                          @{@"name" : @"Swedish", @"code": @"swedish" },
-                          @{@"name" : @"Swiss Food", @"code": @"swissfood" },
-                          @{@"name" : @"Tabernas", @"code": @"tabernas" },
-                          @{@"name" : @"Taiwanese", @"code": @"taiwanese" },
-                          @{@"name" : @"Tapas Bars", @"code": @"tapas" },
-                          @{@"name" : @"Tapas/Small Plates", @"code": @"tapasmallplates" },
-                          @{@"name" : @"Tex-Mex", @"code": @"tex-mex" },
                           @{@"name" : @"Thai", @"code": @"thai" },
-                          @{@"name" : @"Traditional Norwegian", @"code": @"norwegian" },
-                          @{@"name" : @"Traditional Swedish", @"code": @"traditional_swedish" },
-                          @{@"name" : @"Trattorie", @"code": @"trattorie" },
-                          @{@"name" : @"Turkish", @"code": @"turkish" },
-                          @{@"name" : @"Ukrainian", @"code": @"ukrainian" },
-                          @{@"name" : @"Uzbek", @"code": @"uzbek" },
-                          @{@"name" : @"Vegan", @"code": @"vegan" },
-                          @{@"name" : @"Vegetarian", @"code": @"vegetarian" },
-                          @{@"name" : @"Venison", @"code": @"venison" },
-                          @{@"name" : @"Vietnamese", @"code": @"vietnamese" },
-                          @{@"name" : @"Wok", @"code": @"wok" },
-                          @{@"name" : @"Wraps", @"code": @"wraps" },
-                          @{@"name" : @"Yugoslav", @"code": @"yugoslav" }];
+                          @{@"name" : @"Vegetarian", @"code": @"vegetarian" }];
     
+}
+
+
+- (void) initSortOptions {
+    
+    self.sortOptions =  @[ @{@"title" : @"Best match", @"value": @"0" },
+                           @{@"title" : @"Distance", @"value": @"1" },
+                           @{@"title" : @"Rating", @"value": @"2" }];
+}
+
+
+- (void) initDistanceOptions {
+    
+    self.distanceOptions =  @[ @{@"title" : @"Any", @"value": @"40000" },
+                               @{@"title" : @"1 Mile", @"value": @"1609" },
+                               @{@"title" : @"5 Miles", @"value": @"8045" },
+                               @{@"title" : @"20 Miles", @"value": @"32180" }];
 }
 
 @end

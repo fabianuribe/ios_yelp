@@ -18,11 +18,12 @@ NSString * const kYelpConsumerSecret = @"33QCvh5bIF5jIHR5klQr7RtBDhQ";
 NSString * const kYelpToken = @"uRcRswHFYa1VkDrGV6LAW2F8clGh5JHV";
 NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 
-@interface MainViewController () <UITableViewDataSource, UITableViewDelegate, filerViewControllerDellegate>
+@interface MainViewController () <UITableViewDataSource, UITableViewDelegate, filerViewControllerDellegate, UISearchBarDelegate>
 
 @property (nonatomic, strong) YelpClient *client;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (nonatomic, strong) NSArray *businesses;
+@property (nonatomic, strong) UISearchBar *searchBar;
 
 - (void) fetchBusinessesWithQuery: (NSString *)query params: (NSDictionary *)params;
 
@@ -47,6 +48,13 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
     self.tableView.dataSource = self;
     self.tableView.delegate = self;
     self.navigationItem.titleView = [[UISearchBar alloc] init];
+    
+    self.searchBar = [[UISearchBar alloc] init];
+    self.searchBar.placeholder = @"e.g. tacos, Max's";
+    self.searchBar.delegate = self;
+    self.navigationItem.titleView = self.searchBar;
+    
+    
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Filters" style:UIBarButtonItemStyleDone target:self action:@selector(onFilterButton)];
     
     // Register cell view
@@ -54,8 +62,22 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 
     self.tableView.rowHeight = UITableViewAutomaticDimension;
     self.tableView.estimatedRowHeight = 98;
-
     
+}
+
+
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar
+{
+    [self.searchBar resignFirstResponder];
+    // Do the search...
+    [self onSearchButton];
+}
+
+- (void) onSearchButton {
+    NSString *searchTerm = self.searchBar.text;
+//    [self fetchBusinessesWithQuery:searchTerm params:self.filters];
+        [self fetchBusinessesWithQuery:searchTerm params:nil];
 }
 
 - (void)didReceiveMemoryWarning
@@ -83,7 +105,7 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
     cell.categoryLabel.text = [[[business valueForKeyPath: @"categories"] objectAtIndex:0] objectAtIndex:0];
     cell.addressLabel.text =  [NSString stringWithFormat: @"%@, %@", (street.count)? street[0] : @"" , [business valueForKeyPath:@"location.city"]];
     cell.reviewCountLabel.text = [NSString stringWithFormat: @"%@ reviews", business[@"review_count"]];
-    cell.distanceLabel.text = [NSString stringWithFormat:@" %.02f mi", distance ];
+    cell.distanceLabel.text = [NSString stringWithFormat:@" %.02f mi", distance/1609 ];
     
     [cell.thumbImage setImageWithURL:[NSURL URLWithString: [business valueForKeyPath:@"image_url"]]];
     [cell.ratingImage setImageWithURL:[NSURL URLWithString: [business valueForKeyPath:@"rating_img_url_large"]]];
@@ -96,8 +118,11 @@ NSString * const kYelpTokenSecret = @"mqtKIxMIR4iBtBPZCmCLEb-Dz3Y";
 #pragma mark - Filter 
 
 - (void) filterViewController:(filterViewController *)filterViewController didChangeFilters:(NSDictionary *)filters {
+    
+    NSString *searchTerm = self.searchBar.text;
+    
 
-    [self fetchBusinessesWithQuery:@"Restaurants" params: filters];
+    [self fetchBusinessesWithQuery:searchTerm params: filters];
 }
 
 
